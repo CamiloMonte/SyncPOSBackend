@@ -1,66 +1,116 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SyncPOS — Backend (API REST con Laravel)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API de **SyncPOS**, un sistema de punto de venta con control de inventario, registro de ventas **sin conexión** (desde la app Android) y análisis de rentabilidad. Proyecto SENA.
 
-## About Laravel
+Esta API la usan dos clientes:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Cliente | Repositorio |
+|---|---|
+| Panel web (React) | [CamiloMonte/SyncPOSWeb](https://github.com/CamiloMonte/SyncPOSWeb) |
+| App Android del cajero | Proyecto Android (Kotlin + Jetpack Compose) |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Tecnologías:** Laravel 11 · PHP 8.2 · MySQL (XAMPP) · Laravel Sanctum (tokens) · PHPUnit.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+La documentación completa de los endpoints (con ejemplos JSON) está en **[README_API.md](README_API.md)**.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Instalación en otro computador
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Programas necesarios (una sola vez)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Programa | Para qué | Versión |
+|---|---|---|
+| **Git** | Descargar el proyecto | Cualquiera |
+| **XAMPP** | PHP y MySQL | Con **PHP 8.2 o superior** |
+| **Composer** | Instalar las librerías de Laravel | La última |
 
-## Laravel Sponsors
+### 2. Base de datos
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. Abre **XAMPP** y enciende **Apache** y **MySQL**.
+2. Entra a **phpMyAdmin** (`http://localhost/phpmyadmin`) y crea una base de datos vacía llamada **`syncpos`**.
 
-### Premium Partners
+### 3. Descargar y configurar
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+En **Git Bash**:
 
-## Contributing
+```bash
+cd /c/xampp/htdocs
+git clone https://github.com/CamiloMonte/SyncPOSBackend.git SyncPOS
+cd SyncPOS
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Abre el archivo **`.env`** con un editor y deja así las líneas de la base de datos (si empiezan con `#`, quítalo: Laravel 11 viene configurado para SQLite):
 
-## Code of Conduct
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=syncpos
+DB_USERNAME=root
+DB_PASSWORD=
+APP_TIMEZONE=America/Bogota
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+> `APP_TIMEZONE=America/Bogota` hace que "las ventas de hoy" se cuenten con la hora de Colombia. Sin esa línea, después de las 7 p. m. las ventas aparecen como del día siguiente.
 
-## Security Vulnerabilities
+### 4. Crear las tablas y encender la API
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan migrate --seed   # crea las tablas y los datos de ejemplo
+php artisan serve            # deja la API en http://127.0.0.1:8000 (no cierres esta terminal)
+```
 
-## License
+Para comprobar que funciona, abre `http://127.0.0.1:8000/api/estado` en el navegador: debe responder `"estado": "ok"`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+> ⚠️ `php artisan migrate:fresh --seed` **borra todos los datos** y vuelve a crear la base desde cero. Úsalo solo en desarrollo.
+
+### Usuarios de prueba
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Administrador | `admin@syncpos.co` | `password` |
+| Cajero | `cajero@syncpos.co` | `password` |
+
+Son solo para desarrollo: cambia las contraseñas desde el panel web (menú **Usuarios**) antes de usar el sistema de verdad.
+
+### Errores comunes
+
+| Error | Solución |
+|---|---|
+| `php` o `composer` "no se reconoce como comando" | Agrega `C:\xampp\php` al PATH de Windows o usa la consola **Shell** de XAMPP |
+| `SQLSTATE[HY000] [1049] Unknown database 'syncpos'` | Falta crear la base de datos `syncpos` en phpMyAdmin |
+| `SQLSTATE[HY000] [2002]` (no se puede conectar) | MySQL no está encendido en XAMPP |
+| `No application encryption key has been specified` | Falta `php artisan key:generate` |
+
+### Uso diario (después de instalarlo)
+
+1. XAMPP con **MySQL** encendido.
+2. En la carpeta del proyecto: `php artisan serve`.
+
+---
+
+## Pruebas automáticas
+
+```bash
+php artisan test
+```
+
+Usan una base SQLite en memoria (no tocan tu MySQL).
+
+## Estructura principal
+
+```
+routes/api.php            todas las rutas de la API (agrupadas por módulo y rol)
+app/Http/Controllers/     un controlador por módulo (Auth, Producto, Venta, SyncVenta, Reporte, User...)
+app/Http/Requests/        validaciones de cada formulario
+app/Http/Resources/       forma del JSON que devuelve la API
+app/Services/VentaService la regla de "crear una venta" (venta en línea y sincronización offline)
+app/Http/Middleware/      EnsureRole: bloquea rutas según el rol (403)
+database/migrations/      tablas
+database/seeders/         roles, usuarios y productos de ejemplo
+tests/Feature/            pruebas de cada módulo
+```
