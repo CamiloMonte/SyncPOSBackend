@@ -7,6 +7,7 @@ use App\Http\Controllers\MisVentasController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\SyncVentaController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VentaController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/productos', [ProductoController::class, 'store']);
         Route::put('/productos/{producto}', [ProductoController::class, 'update']);
         Route::patch('/productos/{producto}/estado', [ProductoController::class, 'cambiarEstado']);
+
+        // Gestion de usuarios (sin DELETE: se desactivan para conservar el historial de ventas)
+        Route::get('/usuarios', [UserController::class, 'index']);
+        Route::get('/usuarios/{user}', [UserController::class, 'show']);
+        Route::post('/usuarios', [UserController::class, 'store']);
+        Route::put('/usuarios/{user}', [UserController::class, 'update']);
+        Route::patch('/usuarios/{user}/estado', [UserController::class, 'cambiarEstado']);
 
         // Reportes
         Route::get('/reportes/rentabilidad', [ReporteController::class, 'rentabilidad']);

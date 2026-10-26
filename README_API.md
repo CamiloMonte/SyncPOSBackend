@@ -58,6 +58,7 @@ Códigos de respuesta comunes: `401` sin token o token inválido, `403` sin perm
 
 | Método | URL | Rol | Descripción |
 |--------|-----|-----|-------------|
+| GET | `/api/estado` | público | Estado del servidor y de la base de datos (200 si todo bien, 503 si la BD no responde) |
 | POST | `/api/login` | público | Inicia sesión y devuelve el token |
 | POST | `/api/logout` | autenticado | Cierra la sesión (elimina el token actual) |
 | GET | `/api/me` | autenticado | Datos del usuario actual |
@@ -76,6 +77,13 @@ Códigos de respuesta comunes: `401` sin token o token inválido, `403` sin perm
 | GET | `/api/mis-ventas/resumen` | admin, cajero | Resumen del día de las ventas propias (`fecha` opcional) |
 | GET | `/api/reportes/rentabilidad` | admin | Ingresos, costo y ganancia por producto (`desde`, `hasta`; por defecto el mes actual) |
 | GET | `/api/reportes/resumen-dia` | admin | Datos del dashboard (`fecha` opcional) |
+| GET | `/api/usuarios` | admin | Lista de usuarios con `ventas_count`. Filtros: `buscar`, `rol` (admin/cajero), `activo` (1/0) |
+| GET | `/api/usuarios/{id}` | admin | Detalle de un usuario |
+| POST | `/api/usuarios` | admin | Crear usuario (admin o cajero) |
+| PUT | `/api/usuarios/{id}` | admin | Editar usuario. La contraseña es opcional; si cambia, se cierran sus sesiones |
+| PATCH | `/api/usuarios/{id}/estado` | admin | Activar / desactivar cuenta (al desactivar se cierran sus sesiones). No puedes desactivarte a ti mismo |
+
+Los usuarios no se borran, se desactivan: sus ventas siguen apuntando a ellos.
 
 ## Ejemplos
 
@@ -93,6 +101,36 @@ Respuesta:
 {
   "token": "1|abc123...",
   "user": { "id": 2, "name": "Laura Gómez", "email": "cajero@syncpos.co", "rol": "cajero" }
+}
+```
+
+### Crear un cajero
+
+Petición `POST /api/usuarios` (solo admin):
+
+```json
+{
+  "name": "Pedro Ruiz",
+  "email": "pedro@syncpos.co",
+  "password": "clave12345",
+  "password_confirmation": "clave12345",
+  "rol": "cajero"
+}
+```
+
+Respuesta `201`:
+
+```json
+{
+  "data": {
+    "id": 3,
+    "name": "Pedro Ruiz",
+    "email": "pedro@syncpos.co",
+    "rol": "cajero",
+    "activo": true,
+    "ventas_count": 0,
+    "created_at": "2026-10-26T15:00:00.000000Z"
+  }
 }
 ```
 
