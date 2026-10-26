@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\EstadoController;
 use App\Http\Controllers\MisVentasController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReporteController;
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 // --- Autenticación (pública) ---
 // throttle:10,1 = máximo 10 intentos por minuto (protege contra fuerza bruta).
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+
+// --- Estado del servidor y de la base de datos (publico, sin token) ---
+Route::get('/estado', EstadoController::class)->middleware('throttle:60,1');
 
 // --- Rutas protegidas: requieren token de Sanctum ---
 Route::middleware('auth:sanctum')->group(function () {
