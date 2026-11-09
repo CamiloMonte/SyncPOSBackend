@@ -43,7 +43,10 @@ class SyncVentaController extends Controller
                     // La app avisa si la venta se envio al instante ("online") o si espero
                     // sin conexion ("offline"). Si no lo dice, se asume "offline".
                     $datos['origen'] ?? 'offline',
-                    Carbon::parse($datos['vendida_en']), // se conserva la hora real de la venta
+                    // Se conserva la hora real de la venta. Android la envia con su desfase
+                    // (por ejemplo "2026-11-04T10:15:00-05:00"); setTimezone la convierte a la zona
+                    // del servidor, porque la base de datos guarda la hora sin desfase.
+                    Carbon::parse($datos['vendida_en'])->setTimezone(config('app.timezone')),
                     $referencia,
                     // La venta ya ocurrió físicamente en la tienda, por eso se acepta aunque el
                     // stock quede en negativo; el administrador revisa el inventario después.

@@ -89,6 +89,39 @@ class SyncTest extends TestCase
         $this->assertNotNull($venta->sincronizada_en);
     }
 
+    // DEF-04: la app Android envia la hora con su desfase (ISO 8601, por ejemplo -05:00 en Colombia).
+    // El servidor debe convertirla a su zona horaria antes de guardarla; si no, la venta queda corrida.
+    public function test_hora_con_desfase_se_convierte_a_la_zona_del_servidor(): void
+    {
+        config(['app.timezone' => 'UTC']);
+        Sanctum::actingAs(User::factory()->create());
+        $producto = Producto::factory()->create(['stock' => 5]);
+
+        $venta = $this->ventaOffline((string) Str::uuid(), $producto->id, 1);
+        $venta['vendida_en'] = '2026-11-04T10:15:00-05:00'; // formato que envia Android
+
+        $this->postJson('/api/sync/ventas', ['ventas' => [$venta]])->assertOk();
+
+        // 10:15 en Colombia (UTC-5) son las 15:15 en UTC
+        $this->assertSame('2026-11-04 15:15:00', Venta::first()->vendida_en->format('Y-m-d H:i:s'));
+    }
+
+    // DEF-04: en MySQL/MariaDB una columna TIMESTAMP NOT NULL recibia "ON UPDATE CURRENT_TIMESTAMP"
+    // y la hora de la venta se reemplazaba cada vez que se actualizaba la fila (por ejemplo el total).
+    public function test_actualizar_la_venta_no_cambia_la_hora_en_que_se_vendio(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $producto = Producto::factory()->create(['stock' => 5]);
+
+        $this->postJson('/api/sync/ventas', ['ventas' => [$this->ventaOffline((string) Str::uuid(), $producto->id, 1)]])
+            ->assertOk();
+
+        $venta = Venta::first();
+        $venta->update(['total' => 999]);
+
+        $this->assertSame('2026-10-01 10:30:00', $venta->fresh()->vendida_en->format('Y-m-d H:i:s'));
+    }
+
     public function test_producto_inactivo_se_rechaza_y_las_demas_ventas_se_sincronizan(): void
     {
         Sanctum::actingAs(User::factory()->create());
