@@ -65,7 +65,12 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    // SyncPOS: las tiendas estan en Colombia, asi que "hoy", los reportes por dia y la hora de
+    // cada venta se calculan en la hora de Colombia (UTC-5). Con UTC, despues de las 7:00 p. m.
+    // el servidor ya estaba en el dia siguiente y los resumenes del dia salian en $0 (DEF-06).
+    // Es una regla del negocio, por eso no depende de APP_TIMEZONE del .env (el .env de
+    // Laravel 11 trae APP_TIMEZONE=UTC y lo volveria a dejar en UTC).
+    'timezone' => 'America/Bogota',
 
     /*
     |--------------------------------------------------------------------------
