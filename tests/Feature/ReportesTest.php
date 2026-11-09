@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Producto;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -83,5 +84,20 @@ class ReportesTest extends TestCase
             ->assertOk()
             ->assertJsonPath('cantidad', 0)
             ->assertJsonPath('total', 0);
+    }
+
+    // DEF-06: una venta de las 8:00 p. m. en Colombia pertenece a ese dia colombiano.
+    // Con el servidor en UTC ya era el dia siguiente y el resumen del dia la perdia.
+    public function test_venta_de_la_noche_cuenta_en_el_dia_de_colombia(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-04 20:00:00', 'America/Bogota'));
+        $this->crearVentas();
+        Sanctum::actingAs(User::factory()->admin()->create());
+
+        // Sin fecha: "hoy" debe ser el 4 de noviembre en Colombia
+        $this->getJson('/api/reportes/resumen-dia')->assertOk()->assertJsonPath('pedidos', 2);
+
+        // Con la fecha local que envian la web y Android
+        $this->getJson('/api/reportes/resumen-dia?fecha=2026-11-04')->assertOk()->assertJsonPath('pedidos', 2);
     }
 }
